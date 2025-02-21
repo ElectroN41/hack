@@ -3,49 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security System Dashboard</title>
+    <title>Vital Signs Monitor</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .container { width: 80%; margin: auto; }
-        img { width: 100%; max-width: 600px; }
-        .log-container { max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .alert {
+            background-color: red;
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .chart-container {
+            width: 80%;
+            margin: auto;
+        }
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
     </style>
 </head>
 <body>
-    <h1>Security System Dashboard</h1>
-    
-    <div class="container">
-        <h2>Live Camera Feed</h2>
-        <img src="http://localhost:5000/video_feed" alt="Live Camera Feed">
-        
-        <h2>Captured Images</h2>
-        <div id="gallery"></div>
-        
-        <h2>Motion Detection Logs</h2>
-        <div class="log-container" id="logContainer"></div>
+    <h1>Vital Signs Monitor</h1>
+    <div id="alert" class="alert"></div>
+    <div class="chart-container">
+        <canvas id="vitalChart"></canvas>
     </div>
+    <button onclick="resetData()">Reset Data</button>
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        function fetchLogs() {
-            fetch('/logs')
-                .then(response => response.json())
-                .then(data => {
-                    let logContainer = document.getElementById('logContainer');
-                    logContainer.innerHTML = data.logs.map(log => `<p>${log}</p>`).join('');
-                });
+        let vitalData = [];
+        const ctx = document.getElementById('vitalChart').getContext('2d');
+        const vitalChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Heart Rate', borderColor: 'orange', data: [] },
+                    { label: 'Temperature', borderColor: 'blue', data: [] }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: false } }
+            }
+        });
+        
+        function fetchVitalSigns() {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve({ heartRate: Math.floor(Math.random() * 40) + 60, temperature: (Math.random() * 2) + 36 });
+                }, 2000);
+            });
         }
-
-        function fetchImages() {
-            fetch('/images')
-                .then(response => response.json())
-                .then(data => {
-                    let gallery = document.getElementById('gallery');
-                    gallery.innerHTML = data.images.map(img => `<img src="static/${img}" alt="Captured">`).join('');
-                });
+        
+        async function updateVitals() {
+            const newVitals = await fetchVitalSigns();
+            const time = new Date().toLocaleTimeString();
+            vitalData.push({ time, ...newVitals });
+            if (vitalData.length > 10) vitalData.shift();
+            
+            vitalChart.data.labels = vitalData.map(v => v.time);
+            vitalChart.data.datasets[0].data = vitalData.map(v => v.heartRate);
+            vitalChart.data.datasets[1].data = vitalData.map(v => v.temperature);
+            vitalChart.update();
+            
+            if (newVitals.heartRate < 60 || newVitals.heartRate > 100 || newVitals.temperature < 36 || newVitals.temperature > 38) {
+                document.getElementById('alert').textContent = `Abnormal vital signs detected: HR ${newVitals.heartRate} bpm, Temp ${newVitals.temperature.toFixed(1)}°C`;
+                document.getElementById('alert').style.display = 'block';
+            } else {
+                document.getElementById('alert').style.display = 'none';
+            }
         }
-
-        setInterval(fetchLogs, 5000);
-        setInterval(fetchImages, 10000);
+        
+        function resetData() {
+            vitalData = [];
+            vitalChart.data.labels = [];
+            vitalChart.data.datasets[0].data = [];
+            vitalChart.data.datasets[1].data = [];
+            vitalChart.update();
+            document.getElementById('alert').style.display = 'none';
+        }
+        
+        setInterval(updateVitals, 5000);
     </script>
 </body>
 </html>
