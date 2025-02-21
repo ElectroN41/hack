@@ -3,12 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Document</title>
+    <title>Security System Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { width: 80%; margin: auto; }
+        img { width: 100%; max-width: 600px; }
+        .log-container { max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+    </style>
 </head>
 <body>
-
+    <h1>Security System Dashboard</h1>
     
+    <div class="container">
+        <h2>Live Camera Feed</h2>
+        <img src="http://localhost:5000/video_feed" alt="Live Camera Feed">
+        
+        <h2>Captured Images</h2>
+        <div id="gallery"></div>
+        
+        <h2>Motion Detection Logs</h2>
+        <div class="log-container" id="logContainer"></div>
+    </div>
+    
+    <script>
+        function fetchLogs() {
+            fetch('/logs')
+                .then(response => response.json())
+                .then(data => {
+                    let logContainer = document.getElementById('logContainer');
+                    logContainer.innerHTML = data.logs.map(log => `<p>${log}</p>`).join('');
+                });
+        }
+
+        function fetchImages() {
+            fetch('/images')
+                .then(response => response.json())
+                .then(data => {
+                    let gallery = document.getElementById('gallery');
+                    gallery.innerHTML = data.images.map(img => `<img src="static/${img}" alt="Captured">`).join('');
+                });
+        }
+
+        setInterval(fetchLogs, 5000);
+        setInterval(fetchImages, 10000);
+    </script>
 </body>
-<script src="script.js"></script>
 </html>
