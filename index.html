@@ -4,38 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vital Signs Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            background: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
             text-align: center;
         }
         .alert {
+            display: none;
             background-color: red;
             color: white;
             padding: 10px;
+            border-radius: 5px;
             margin-bottom: 10px;
-            display: none;
         }
         .chart-container {
-            width: 80%;
-            margin: auto;
+            width: 100%;
+            margin: 20px 0;
         }
         canvas {
             width: 100% !important;
             height: auto !important;
         }
+        button {
+            background: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
     </style>
 </head>
 <body>
-    <h1>Vital Signs Monitor</h1>
-    <div id="alert" class="alert"></div>
-    <div class="chart-container">
-        <canvas id="vitalChart"></canvas>
+    <div class="container">
+        <h1>Vital Signs Monitor</h1>
+        <div id="alert" class="alert"></div>
+        <div class="chart-container">
+            <canvas id="vitalChart"></canvas>
+        </div>
+        <button onclick="resetData()">Reset Data</button>
     </div>
-    <button onclick="resetData()">Reset Data</button>
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let vitalData = [];
         const ctx = document.getElementById('vitalChart').getContext('2d');
@@ -44,13 +80,16 @@
             data: {
                 labels: [],
                 datasets: [
-                    { label: 'Heart Rate', borderColor: 'orange', data: [] },
-                    { label: 'Temperature', borderColor: 'blue', data: [] }
+                    { label: 'Heart Rate (bpm)', borderColor: 'orange', data: [], fill: false },
+                    { label: 'Temperature (°C)', borderColor: 'blue', data: [], fill: false }
                 ]
             },
             options: {
                 responsive: true,
-                scales: { y: { beginAtZero: false } }
+                maintainAspectRatio: false,
+                scales: { 
+                    y: { beginAtZero: false } 
+                }
             }
         });
         
@@ -74,7 +113,7 @@
             vitalChart.update();
             
             if (newVitals.heartRate < 60 || newVitals.heartRate > 100 || newVitals.temperature < 36 || newVitals.temperature > 38) {
-                document.getElementById('alert').textContent = `Abnormal vital signs detected: HR ${newVitals.heartRate} bpm, Temp ${newVitals.temperature.toFixed(1)}°C`;
+                document.getElementById('alert').textContent = `Abnormal vitals: HR ${newVitals.heartRate} bpm, Temp ${newVitals.temperature.toFixed(1)}°C`;
                 document.getElementById('alert').style.display = 'block';
             } else {
                 document.getElementById('alert').style.display = 'none';
